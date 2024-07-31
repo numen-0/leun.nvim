@@ -28,19 +28,21 @@ local palette = {
     black1 = "#121212", black2 = "#303030", -- film_noir
 }
 local flavours = {
-    green   = { color1 = "#669d33", color2 = "#9fff54", }, -- film_noir
-    rose    = { color1 = "#830457", color2 = "#ff549f", }, -- film_noir
-    blue    = { color1 = "#33669d", color2 = "#549fff", }, -- film_noir
-    red     = { color1 = "#9e1929", color2 = "#fe4a49", },
-    yellow  = { color1 = "#f3d34a", color2 = "#f3e37c", },
-    orange  = { color1 = "#7c3626", color2 = "#ff5714", },
-    lime    = { color1 = "#28965a", color2 = "#2ceaa3", },
-    purple  = { color1 = "#9040a0", color2 = "#bf7ccb", },
-    white   = { color1 = "#808080", color2 = "#fefefe", },
+    green       = { color1 = "#669d33", color2 = "#9fff54", }, -- film_noir
+    rose        = { color1 = "#830457", color2 = "#ff549f", }, -- film_noir
+    blue        = { color1 = "#33669d", color2 = "#549fff", }, -- film_noir
+    red         = { color1 = "#9e1929", color2 = "#fe4a49", },
+    yellow      = { color1 = "#f3d34a", color2 = "#f3e37c", },
+    orange      = { color1 = "#7c3626", color2 = "#ff5714", },
+    lime        = { color1 = "#28965a", color2 = "#2ceaa3", },
+    purple      = { color1 = "#9040a0", color2 = "#bf7ccb", },
+    white       = { color1 = "#808080", color2 = "#fefefe", },
 
-    hotdog  = { color1 = "#fed766", color2 = "#fe4a49", },
-    doghot  = { color1 = "#fe4a49", color2 = "#fed766", },
-    militar = { color1 = "#3a5a40", color2 = "#588157", },
+    hotdog      = { color1 = "#fed766", color2 = "#fe4a49", },
+    doghot      = { color1 = "#fe4a49", color2 = "#fed766", },
+    militar     = { color1 = "#3a5a40", color2 = "#588157", },
+    emerald     = { color1 = "#254441", color2 = "#43AA8B", },
+    beetroot    = { color1 = "#734b5e", color2 = "#ebad98", },
 }
 
 if not vim.g.leun_flavour or not flavours[vim.g.leun_flavour] then
@@ -141,7 +143,7 @@ local theme = lush(function(injected_functions)
 
         -- syntax groups of code and markup
         -- See :h group-name
-        Comment   { fg = palette.color1 },                -- Any comment
+        Comment   { fg = palette.color1, gui = "italic" },                -- Any comment
 
         Constant  { fg = palette.color2, gui = "bold" },  -- (*) Any constant
         String    { fg = palette.color2 },                --   A string constant: "this is a string"
@@ -181,8 +183,8 @@ local theme = lush(function(injected_functions)
 
         Underlined     { fg = palette.white1, gui = "underline" }, -- Text that stands out, HTML links
         -- Ignore         { }, -- Left blank, hidden |hl-Ignore| (NOTE: May be invisible here in template)
-        -- Error          { }, -- Any erroneous construct
-        -- Todo           { }, -- Anything that needs extra attention; mostly the keywords TODO FIXME and XXX
+        -- Error          { },   -- Any erroneous construct
+        Todo           { fg = palette.black1, bg = palette.color2 }, -- Anything that needs extra attention; mostly the keywords TODO FIXME and XXX
 
 
         -- native LSP client and diagnostic system
