@@ -19,37 +19,28 @@
 --  :Lushify
 
 local lush = require('lush')
-local hsl = lush.hsl
+local hsl  = lush.hsl
 
--- color palette
-local palette = {
-    white1 = "#bcbcbc", white2 = "#eeeeee", -- film_noir base colors https://github.com/judah-caruso/film-noir
-    gray1  = "#585858", gray2  = "#8a8a8a", -- film_noir
-    black1 = "#121212", black2 = "#303030", -- film_noir
-}
-local flavours = {
-    green       = { color1 = "#669d33", color2 = "#9fff54", }, -- film_noir
-    rose        = { color1 = "#830457", color2 = "#ff549f", }, -- film_noir
-    blue        = { color1 = "#33669d", color2 = "#549fff", }, -- film_noir
-    red         = { color1 = "#9e1929", color2 = "#fe4a49", },
-    yellow      = { color1 = "#f3d34a", color2 = "#f3e37c", },
-    orange      = { color1 = "#7c3626", color2 = "#ff5714", },
-    lime        = { color1 = "#28965a", color2 = "#2ceaa3", },
-    purple      = { color1 = "#9040a0", color2 = "#bf7ccb", },
-    white       = { color1 = "#808080", color2 = "#fefefe", },
+local palette = require("leun").config.palette
 
-    hotdog      = { color1 = "#fed766", color2 = "#fe4a49", },
-    doghot      = { color1 = "#fe4a49", color2 = "#fed766", },
-    militar     = { color1 = "#3a5a40", color2 = "#588157", },
-    emerald     = { color1 = "#254441", color2 = "#43AA8B", },
-    beetroot    = { color1 = "#734b5e", color2 = "#ebad98", },
-}
-
-if not vim.g.leun_flavour or not flavours[vim.g.leun_flavour] then
-    vim.g.leun_flavour = "lime" -- default
+-- test
+if false then
+    local test = {
+        -- white1  = "#bcbcbc",
+        -- white2  = "#eeeeee",
+        -- gray1   = "#585858",
+        -- gray2   = "#8a8a8a",
+        -- black1  = "#121212",
+        -- black2  = "#303030",
+        -- error   = "#fe4a49",
+        -- warning = "#fed766",
+        -- info    = "#549fff",
+        -- hint    = "#2ceaa3",
+        color1  = "#f3d34a",
+        color2  = "#f3e37c",
+    }
+    palette = vim.tbl_extend("force", palette, test)
 end
-
-palette = vim.tbl_extend("force", palette, flavours[vim.g.leun_flavour])
 
 ---@diagnostic disable: undefined-global
 local theme = lush(function(injected_functions)
@@ -143,17 +134,17 @@ local theme = lush(function(injected_functions)
 
         -- syntax groups of code and markup
         -- See :h group-name
-        Comment   { fg = palette.color1, gui = "italic" },                -- Any comment
+        Comment   { fg = palette.color1, gui = "italic" }, -- Any comment
 
-        Constant  { fg = palette.color2, gui = "bold" },  -- (*) Any constant
-        String    { fg = palette.color2 },                --   A string constant: "this is a string"
-        Boolean   { Constant },                           --   A boolean constant: TRUE, false
-        Character { String },                             --   A character constant: 'c', '\n'
-        Float     { String },                             --   A floating point constant: 2.3e10
-        Number    { String },                             --   A number constant: 234, 0xff
+        Constant  { fg = palette.color2, gui = "bold" },   -- (*) Any constant
+        String    { fg = palette.color2 },                 --   A string constant: "this is a string"
+        Boolean   { Constant },                            --   A boolean constant: TRUE, false
+        Character { String },                              --   A character constant: 'c', '\n'
+        Float     { String },                              --   A floating point constant: 2.3e10
+        Number    { String },                              --   A number constant: 234, 0xff
 
-        Identifier { Normal },                            -- (*) Any variable name
-        Function   { Normal },                            --   Function name (also: methods for classes)
+        Identifier { Normal },                             -- (*) Any variable name
+        Function   { Normal },                             --   Function name (also: methods for classes)
 
         Statement      { fg = palette.white2, gui = "bold" },  -- (*) Any statement
         -- Conditional    { }, --   if, then, else, endif, switch, etc.
@@ -183,7 +174,7 @@ local theme = lush(function(injected_functions)
 
         Underlined     { fg = palette.white1, gui = "underline" }, -- Text that stands out, HTML links
         -- Ignore         { }, -- Left blank, hidden |hl-Ignore| (NOTE: May be invisible here in template)
-        -- Error          { },   -- Any erroneous construct
+        -- Error          { }, -- Any erroneous construct
         Todo           { fg = palette.black1, bg = palette.color2 }, -- Anything that needs extra attention; mostly the keywords TODO FIXME and XXX
 
 
@@ -197,11 +188,11 @@ local theme = lush(function(injected_functions)
         -- LspSignatureActiveParameter { } , -- Used to highlight the active parameter in the signature help. See |vim.lsp.handlers.signature_help()|.
 
         -- See :h diagnostic-highlights
-        DiagnosticError            { fg = palette.color1, gui = "bold" } , -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
-        DiagnosticWarn             { DiagnosticError } ,                   -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
-        DiagnosticInfo             { fg = palette.color1 } ,               -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
-        DiagnosticHint             { DiagnosticInfo } ,                    -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
-        DiagnosticOk               { DiagnosticInfo } ,                    -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
+        DiagnosticError            { fg = palette.error, gui = "bold" },   -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
+        DiagnosticWarn             { fg = palette.warning, gui = "bold" }, -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
+        DiagnosticInfo             { fg = palette.info, gui = "bold" },    -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
+        DiagnosticHint             { fg = palette.hint, gui = "bold" },    -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
+        DiagnosticOk               { DiagnosticHint } ,                    -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
         -- DiagnosticVirtualTextError { } , -- Used for "Error" diagnostic virtual text.
         -- DiagnosticVirtualTextWarn  { } , -- Used for "Warn" diagnostic virtual text.
         -- DiagnosticVirtualTextInfo  { } , -- Used for "Info" diagnostic virtual text.
