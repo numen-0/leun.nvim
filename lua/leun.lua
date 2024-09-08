@@ -1,7 +1,5 @@
--- NOTE: idea(s):
---        - light mode
---        - color gen tools
---        - change flav when event (change mode, read only, file type...)
+-- IDEA: light mode
+-- IDEA: change flav when event (change mode, read only, file type...)
 -- NOTE: cool colors #77f595 #fda06d #fb4151
 -- NOTE: maybe reserving some flav "" (empty string) to point to active flav.
 --       would be a better idea when we want to access the active flav. Now we
@@ -9,11 +7,10 @@
 -- NOTE: some config public stuff put it in local or gave some public set/get
 --       functs.
 -- NOTE: add the CursorLine highlight stuff used in the lazy.nvim example here?
--- NOTE: if user passes bad input what do we do?
 
-local M = {}
-M.__index = M
-M.config  = {}
+local M  = {}
+M.config = {}
+
 
 local default = {
     flavour    = "lime",
@@ -24,18 +21,22 @@ local default = {
     queue_size = 4, -- random flavours queue size
     -- colors
     base_colors = {
-        white1 = "#bcbcbc",
-        white2 = "#eeeeee",
-        gray1  = "#585858",
-        gray2  = "#8a8a8a",
-        black1 = "#121212",
-        black2 = "#303030",
+        white1 = "#bcbcbc", white2 = "#eeeeee",
+        gray1  = "#585858", gray2  = "#8a8a8a",
+        black1 = "#121212", black2 = "#303030",
     },
     diagnostics_colors = {
-        error   = "#fe4a49",
-        warning = "#fed766",
         info    = "#549fff",
         hint    = "#2ceaa3",
+        warning = "#fed766",
+        error   = "#fe4a49",
+    },
+    base16_colors = {
+        white1  = "Gray",       white2  = "White",
+        gray1   = "DarkGray",   gray2   = "Gray",
+        black1  = "Black",      black2  = "DarkGray",
+        info    = "Blue",       hint    = "Cyan",
+        warning = "Yellow",     error   = "Red",
     },
     -- name = {args},
     -- {args}
@@ -44,7 +45,7 @@ local default = {
     --   optional colors:
     --     white1, white2, gray1, gray2, black1, black2, error, warning, info, hint
     --   optional params:
-    --      mode (int)
+    --      mode (int), base16 (bool)
     flavours = {
         green     = { color1 = "#669d33", color2 = "#9fff54", },
         rose      = { color1 = "#830457", color2 = "#ff549f", },
@@ -65,15 +66,17 @@ local default = {
         crimson   = { color1 = "#c652f9", color2 = "#d5174d", },
         cactus    = { color1 = "#31c30e", color2 = "#1f8532", },
 
+        red16     = { color1 = "DarkRed",     color2 = "Red",     base16 = true, },
+        purple16  = { color1 = "DarkMagenta", color2 = "Magenta", base16 = true, },
+
         -- random = {}, -- reserved flav. for .random() (dont use this name)
     },
     -- add your own flavours here (recomended). If you don't want to have the
     -- base flavours you can use the table abobe.
-    -- user_flavours = { beef = { color1 = "#bada55", color2 = "#caffee" }, },
+    -- user_flavours = {},
     -- add your favorite flavour names here
-    -- mark_list = { "red", "beetroot", },
+    -- mark_list = {},
 }
-
 local mmode = {
     monomono = 1,
     somemono = 2,
@@ -87,9 +90,22 @@ local rand_queue    = {}
 local fyt_active    = false
 local mappings      = {}
 
+local base16_map = {
+    [1] = "Black",   [2]  = "DarkBlue",   [3]  = "DarkGreen", [4] = "DarkCyan",
+    [5] = "DarkRed", [6]  = "DarkMagenta",[7]  = "DarkYellow",[8] = "Gray",
+    [9] = "DarkGray",[10] = "Blue",       [11] = "Green",     [12] = "Cyan",
+    [13] = "Red",    [14] = "Magenta",    [15] = "Yellow",    [16] = "White",
+}
+local hex_map = {
+    [1]  = "0", [2]  = "1", [3]  = "2", [4]  = "3",
+    [5]  = "4", [6]  = "5", [7]  = "6", [8]  = "7",
+    [9]  = "8", [10] = "9", [11] = "a", [12] = "b",
+    [13] = "c", [14] = "d", [15] = "e", [16] = "f",
+}
+
 
 ---@param tag  string
----@param bool boolean
+---@param bool boolean?
 local function print_tag_bool(tag, bool)
     local str
     if bool then str = string.format("  %-13s true", tag .. ":")
@@ -170,6 +186,7 @@ function M.print(write_rgb)
     local carr = { p.info, p.hint, p.warning, p.error }
     print_tag_colors_arr("diagnostics", carr, write_rgb, false)
     print_tag_int("mode", p.mode)
+    print_tag_bool("base16", p.base16)
 
     vim.cmd("echo 'flavours:' | echo ''")           -- flavours
     for _, flav in ipairs(flavour_list) do
@@ -204,6 +221,10 @@ function M.print(write_rgb)
     vim.api.nvim_set_hl(0, 'LeunBold',  {})         -- clear
     vim.api.nvim_set_hl(0, 'LeunTemp1', {})
     vim.api.nvim_set_hl(0, 'LeunTemp2', {})
+end
+
+local function print_call(_)
+    M.print(nil)
 end
 
 -- writtes the code you need to generate for "flavour" to the buffer
@@ -256,16 +277,21 @@ end
 local function gen_palette(flavour)
     if not flavour then return false end
 
-    if not M.config.flavours[flavour] then
+    local flav = M.config.flavours[flavour]
+    if not flav then
         print("leun: unkwon flavour '" .. flavour .. "'")
         print("      do ':lua require(\"leun\").print()' to get flavour names")
         return false
     end
 
     local palette
-    palette = vim.tbl_extend("keep",
-        M.config.base_colors, M.config.diagnostics_colors)
-    palette = vim.tbl_extend("force", palette, M.config.flavours[flavour])
+    if flav.base16 then
+        palette = vim.tbl_extend("force", M.config.base16_colors, flav)
+    else
+        palette = vim.tbl_extend("keep",
+            M.config.base_colors, M.config.diagnostics_colors)
+        palette = vim.tbl_extend("force", palette, flav)
+    end
 
     palette.mode = palette.mode or M.config.mode
 
@@ -349,6 +375,7 @@ end
 -- mappings (normal mode):
 --      <esc>   .find_your_taste()
 --      r       .random()
+--      R       .random(true) -- base16
 --      s       .switch()
 --      m       .mark()
 --
@@ -362,11 +389,12 @@ end
 --      i       .print()
 --      I       .get_palette()
 --      M       .get_marked()
-function M.find_your_taste(_)
+function M.find_your_taste()
     if not fyt_active then
         local opts = {}
         set_map("n", "<esc>", ":LeunFYT<cr>", opts)
         set_map("n", "r",     M.random,       opts)
+        set_map("n", "R",     function() M.random(true) end, opts)
         set_map("n", "s",     M.switch,       opts)
         set_map("n", "m",     M.mark,         opts)
 
@@ -392,6 +420,10 @@ function M.find_your_taste(_)
     end
 end
 
+local function find_your_taste_call(_)
+    M.find_your_taste()
+end
+
 -- load flavour
 ---@param flavour string|nil flavour name or nil for reload
 function M.load(flavour)
@@ -401,11 +433,9 @@ function M.load(flavour)
 
     if not gen_palette(flavour) then return end
 
-    vim.opt.background = 'dark'
-    vim.g.colors_name  = 'leun'
-
-    package.loaded['lush_theme.leun'] = nil
-    require('lush')(require('lush_theme.leun'))
+    -- NOTE: if we load the cs 'manually' it messes :syntax, we fix it by asking
+    --       nvim to load it
+    vim.cmd("colorscheme leun")
 end
 
 -- flavour = { [link = {flav}], [color1|color2|black1|... = "..."] }
@@ -533,28 +563,31 @@ function M.mark(flavour, action)
         mark_list[#mark_list] = nil
     end
 end
-
--- gen a random color "#??????"
+-- gen a random color "#??????" or base16 color
+---@param  base16 boolean?
 ---@return string
-function M.random_color()
-    local hex = "0123456789abcdef"
+function M.random_color(base16)
+    if base16 then return base16_map[math.random(1, 16)] end
+
     local color = "#"
     for _ = 1, 6, 1 do
-        local i = math.random(1, 16)
-        color = color .. hex:sub(i, i)
+        color = color .. hex_map[math.random(1, 16)]
     end
     return color
 end
+---@param  base16 boolean?
 ---@return table
-local function random_flav()
-   return {
-        color1 = M.random_color(),
-        color2 = M.random_color(),
+local function random_flav(base16)
+    return {
+        color1 = M.random_color(base16),
+        color2 = M.random_color(base16),
+        base16 = base16,
     }
 end
 -- gen random flavour and load it
-function M.random()
-    local flavour = random_flav()
+---@param base16 boolean?
+function M.random(base16)
+    local flavour = random_flav(base16)
 
     if M.config.queue_size >= 1 then
         for i = M.config.queue_size - 1, 1, -1 do
@@ -602,8 +635,8 @@ function M.setup(opts)
     end
     table.sort(flavour_list, function(a, b) return a < b end) -- sort ascending
 
-    vim.api.nvim_create_user_command('LeunFYT',   M.find_your_taste, {})
-    vim.api.nvim_create_user_command('LeunPrint', M.print, {})
+    vim.api.nvim_create_user_command('LeunFYT',   find_your_taste_call, {})
+    vim.api.nvim_create_user_command('LeunPrint', print_call, {})
 end
 
 -- switch flavour colors

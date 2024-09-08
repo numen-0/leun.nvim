@@ -1,4 +1,4 @@
-# lazy.nvim
+# leun.nvim
 
 A minimal nvim colorscheme
 
@@ -61,18 +61,22 @@ defaul config:
     queue_size = 4, -- random flavours queue size
     -- colors
     base_colors = {
-        white1 = "#bcbcbc",
-        white2 = "#eeeeee",
-        gray1  = "#585858",
-        gray2  = "#8a8a8a",
-        black1 = "#121212",
-        black2 = "#303030",
+        white1 = "#bcbcbc", white2 = "#eeeeee",
+        gray1  = "#585858", gray2  = "#8a8a8a",
+        black1 = "#121212", black2 = "#303030",
     },
     diagnostics_colors = {
-        error   = "#fe4a49",
-        warning = "#fed766",
         info    = "#549fff",
         hint    = "#2ceaa3",
+        warning = "#fed766",
+        error   = "#fe4a49",
+    },
+    base16_colors = {
+        white1  = "Gray",       white2  = "White",
+        gray1   = "DarkGray",   gray2   = "Gray",
+        black1  = "Black",      black2  = "DarkGray",
+        info    = "Blue",       hint    = "Cyan",
+        warning = "Yellow",     error   = "Red",
     },
     -- name = {args},
     -- {args}
@@ -81,7 +85,7 @@ defaul config:
     --   optional colors:
     --     white1, white2, gray1, gray2, black1, black2, error, warning, info, hint
     --   optional params:
-    --      mode (int)
+    --      mode (int), base16 (bool)
     flavours = {
         green     = { color1 = "#669d33", color2 = "#9fff54", },
         rose      = { color1 = "#830457", color2 = "#ff549f", },
@@ -102,13 +106,16 @@ defaul config:
         crimson   = { color1 = "#c652f9", color2 = "#d5174d", },
         cactus    = { color1 = "#31c30e", color2 = "#1f8532", },
 
+        red16     = { color1 = "DarkRed",     color2 = "Red",     base16 = true, },
+        purple16  = { color1 = "DarkMagenta", color2 = "Magenta", base16 = true, },
+
         -- random = {}, -- reserved flav. for .random() (dont use this name)
     },
     -- add your own flavours here (recomended). If you don't want to have the
     -- base flavours you can use the table abobe.
-    -- user_flavours = { beef = { color1 = "#bada55", color2 = "#caffee" }, },
+    -- user_flavours = {},
     -- add your favorite flavour names here
-    -- mark_list = { "red", "beetroot", },
+    -- mark_list = {},
 }
 ```
 
@@ -158,6 +165,7 @@ local leun = require("leun")
 -- mappings (normal mode):
 --      <esc>   .find_your_taste()
 --      r       .random()
+--      R       .random(true) -- base16
 --      s       .switch()
 --      m       .mark()
 --
@@ -225,12 +233,14 @@ leun.mark(flavour, action)
 -- switch flavour colors
 leun.switch()
 
--- gen a random color "#??????"
+-- gen a random color "#??????" or base16 color
+---@param  base16 boolean?
 ---@return string
-leun.random_color()
+leun.random_color(base16)
 
 -- gen random flavour and load it
-leun.random()
+---@param base16 boolean?
+leun.random(base16)
 
 
 -- iterate throgh the flavour list
@@ -254,6 +264,11 @@ leun.get_palette(flavour, tab)
 -- writtes the code you need to generate for all marked flavours to the buffer
 ---@param tab boolean false|nil: raw table, true:  .add() call
 leun.get_marked(tab)
+```
+
+### party trick
+```
+vim.on_key(leun.random, 0)
 ```
 
 ## Credits
